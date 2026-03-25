@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simpli.fi Agency Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#0a0e17;--surface:#111827;--surface-2:#1a2235;--border:#1e2a3a;--text:#e2e8f0;--text-dim:#64748b;--accent:#0066FF;--accent-glow:rgba(0,102,255,0.15);--green:#22c55e;--blue:#3b82f6;--purple:#a855f7;--red:#ef4444;--yellow:#eab308}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+body::after{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:1000}
+.header{padding:40px 48px 20px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(0,102,255,0.06) 0%,transparent 100%)}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.header h1{font-family:'Playfair Display',serif;font-weight:900;font-size:42px;letter-spacing:-1px;background:linear-gradient(135deg,var(--accent) 0%,#3388FF 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header .subtitle{color:var(--text-dim);font-size:15px;margin-top:4px}
+.live-badge{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);padding:8px 16px;border-radius:24px;font-size:13px;color:var(--text-dim)}
+.live-dot{width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,0.4)}50%{opacity:0.7;box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+.dashboard{padding:32px 48px;max-width:1400px}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:32px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;position:relative;overflow:hidden;opacity:0;transform:translateY(20px);animation:fadeUp 0.5s ease forwards}
+.kpi-card:nth-child(1){animation-delay:0.1s}.kpi-card:nth-child(2){animation-delay:0.2s}.kpi-card:nth-child(3){animation-delay:0.3s}.kpi-card:nth-child(4){animation-delay:0.4s}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi-card:nth-child(1)::before{background:var(--accent)}.kpi-card:nth-child(2)::before{background:var(--green)}.kpi-card:nth-child(3)::before{background:var(--blue)}.kpi-card:nth-child(4)::before{background:var(--purple)}
+.kpi-label{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:8px}
+.kpi-value{font-family:'Playfair Display',serif;font-size:48px;font-weight:900;line-height:1}
+.kpi-card:nth-child(1) .kpi-value{color:var(--accent)}.kpi-card:nth-child(2) .kpi-value{color:var(--green)}.kpi-card:nth-child(3) .kpi-value{color:var(--blue)}.kpi-card:nth-child(4) .kpi-value{color:var(--purple)}
+.kpi-sub{font-size:13px;color:var(--text-dim);margin-top:6px}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;opacity:0;transform:translateY(20px);animation:fadeUp 0.5s ease forwards;animation-delay:0.5s}
+.chart-card.full-width{grid-column:1/-1}
+.chart-title{font-size:14px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:20px}
+.chart-container{position:relative;height:300px}
+.completeness-grid{display:grid;gap:16px}
+.completeness-row{display:flex;align-items:center;gap:16px}
+.completeness-label{width:100px;font-size:14px;color:var(--text-dim);text-align:right}
+.completeness-bar-bg{flex:1;height:32px;background:var(--surface-2);border-radius:6px;overflow:hidden}
+.completeness-bar{height:100%;border-radius:6px;transition:width 1.5s cubic-bezier(0.22,1,0.36,1)}
+.completeness-bar.orange{background:linear-gradient(90deg,var(--accent),#3388FF)}.completeness-bar.green{background:linear-gradient(90deg,var(--green),#4ade80)}.completeness-bar.blue{background:linear-gradient(90deg,var(--blue),#60a5fa)}.completeness-bar.purple{background:linear-gradient(90deg,var(--purple),#c084fc)}
+.completeness-pct{width:60px;font-size:20px;font-weight:700;text-align:left}
+.city-table{width:100%;border-collapse:collapse}
+.city-table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);padding:8px 12px;border-bottom:1px solid var(--border)}
+.city-table td{padding:10px 12px;font-size:14px;border-bottom:1px solid var(--border)}
+.city-table tr:hover td{background:var(--accent-glow)}
+.city-count{font-weight:700;color:var(--accent);font-size:18px}
+.city-bar-cell{width:40%}
+.city-mini-bar{height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden}
+.city-mini-fill{height:100%;background:var(--accent);border-radius:3px;transition:width 1s ease}
+.loading{display:flex;align-items:center;justify-content:center;min-height:60vh;font-size:18px;color:var(--text-dim)}
+.loading-spinner{width:40px;height:40px;border:3px solid var(--border);border-top:3px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-right:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr)}.charts-grid{grid-template-columns:1fr}.header{padding:24px}.dashboard{padding:24px}.header h1{font-size:28px}}
+</style>
+</head>
+<body>
+<div id="app"><div class="loading"><div class="loading-spinner"></div>Loading live data...</div></div>
+<script>
+const SUPABASE_URL='REPLACE_SUPABASE_URL';
+const SUPABASE_ANON_KEY='REPLACE_SUPABASE_ANON_KEY';
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+Chart.defaults.color='#64748b';Chart.defaults.borderColor='#1e2a3a';Chart.defaults.font.family="'DM Sans',sans-serif";
+async function loadData(){
+const{count:total}=await sb.from('agencies').select('*',{count:'exact',head:true});
+let allRows=[];let from=0;const PAGE=1000;while(true){const{data,error}=await sb.from('agencies').select('city,category,email,phone,physical_address,clean_markdown,created_at').range(from,from+PAGE-1);if(error||!data||data.length===0)break;allRows=allRows.concat(data);if(data.length<PAGE)break;from+=PAGE}
+const withEmail=allRows.filter(r=>r.email).length;
+const withPhone=allRows.filter(r=>r.phone).length;
+const withAddress=allRows.filter(r=>r.physical_address).length;
+const withMarkdown=allRows.filter(r=>r.clean_markdown).length;
+const cities=[...new Set(allRows.map(r=>r.city).filter(Boolean))].length;
+const byCity={};allRows.forEach(r=>{if(r.city)byCity[r.city]=(byCity[r.city]||0)+1});
+const citySorted=Object.entries(byCity).sort((a,b)=>b[1]-a[1]);
+const byCat={};allRows.forEach(r=>{const raw=r.category||'Uncategorized';const cat=raw.split('|')[0].trim();byCat[cat]=(byCat[cat]||0)+1});
+const catSorted=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,15);
+const byDate={};allRows.forEach(r=>{const date=r.created_at?.split('T')[0];if(date)byDate[date]=(byDate[date]||0)+1});
+let cum=0;const growth=Object.entries(byDate).sort().map(([date,count])=>{cum+=count;return{date,added:count,total:cum}});
+const{data:heartbeats}=await sb.from('agent_heartbeats').select('*');
+return{total,withEmail,withPhone,withAddress,withMarkdown,cities,citySorted,catSorted,growth,heartbeats:heartbeats||[]}}
+function render(data){
+const maxCity=data.citySorted[0]?.[1]||1;
+document.getElementById('app').innerHTML=`
+<div class="header"><div class="header-top"><div><h1>Simpli.fi Agency Intelligence</h1><div class="subtitle">AI-powered agency discovery across ${data.cities} Colorado cities</div></div><div class="live-badge"><div class="live-dot"></div>Live from Supabase</div></div></div>
+<div class="dashboard">
+<div class="kpi-row">
+<div class="kpi-card"><div class="kpi-label">Total Agencies</div><div class="kpi-value">${data.total.toLocaleString()}</div><div class="kpi-sub">Across ${data.cities} cities</div></div>
+<div class="kpi-card"><div class="kpi-label">With Phone</div><div class="kpi-value">${data.withPhone.toLocaleString()}</div><div class="kpi-sub">${Math.round(data.withPhone/data.total*100)}% of agencies</div></div>
+<div class="kpi-card"><div class="kpi-label">With Address</div><div class="kpi-value">${data.withAddress.toLocaleString()}</div><div class="kpi-sub">${Math.round(data.withAddress/data.total*100)}% of agencies</div></div>
+<div class="kpi-card"><div class="kpi-label">With Email</div><div class="kpi-value">${data.withEmail.toLocaleString()}</div><div class="kpi-sub">${Math.round(data.withEmail/data.total*100)}% of agencies</div></div>
+</div>
+<div class="charts-grid">
+<div class="chart-card full-width"><div class="chart-title">Agent Status</div>
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+${(data.heartbeats||[]).map(a => {
+const ago = Math.round((Date.now() - new Date(a.last_heartbeat).getTime()) / 60000);
+const isAlive = ago < 10;
+const statusColor = isAlive ? '#22c55e' : ago < 60 ? '#eab308' : '#ef4444';
+const statusText = isAlive ? 'Active' : ago < 60 ? 'Idle' : 'Offline';
+return '<div style="background:var(--surface-2);border-radius:8px;padding:16px;border-left:3px solid '+statusColor+'"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-weight:700;font-size:14px">'+a.agent_name+'</span><span style="background:'+statusColor+'22;color:'+statusColor+';padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">'+statusText+'</span></div><div style="font-size:12px;color:var(--text-dim)">'+( a.last_message||'No activity')+'</div><div style="font-size:11px;color:var(--text-dim);margin-top:4px">'+ago+'m ago &middot; '+( a.items_processed||0)+' processed</div></div>'
+}).join('')}
+</div></div></div>
+<div class="charts-grid">
+<div class="chart-card full-width"><div class="chart-title">Agency Growth Over Time</div><div class="chart-container"><canvas id="growthChart"></canvas></div></div>
+<div class="chart-card"><div class="chart-title">Data Completeness</div><div class="completeness-grid">
+<div class="completeness-row"><div class="completeness-label">Phone</div><div class="completeness-bar-bg"><div class="completeness-bar orange" style="width:0%" data-target="${Math.round(data.withPhone/data.total*100)}"></div></div><div class="completeness-pct">${Math.round(data.withPhone/data.total*100)}%</div></div>
+<div class="completeness-row"><div class="completeness-label">Address</div><div class="completeness-bar-bg"><div class="completeness-bar green" style="width:0%" data-target="${Math.round(data.withAddress/data.total*100)}"></div></div><div class="completeness-pct">${Math.round(data.withAddress/data.total*100)}%</div></div>
+<div class="completeness-row"><div class="completeness-label">Email</div><div class="completeness-bar-bg"><div class="completeness-bar blue" style="width:0%" data-target="${Math.round(data.withEmail/data.total*100)}"></div></div><div class="completeness-pct">${Math.round(data.withEmail/data.total*100)}%</div></div>
+<div class="completeness-row"><div class="completeness-label">Markdown</div><div class="completeness-bar-bg"><div class="completeness-bar purple" style="width:0%" data-target="${Math.round(data.withMarkdown/data.total*100)}"></div></div><div class="completeness-pct">${Math.round(data.withMarkdown/data.total*100)}%</div></div>
+</div></div>
+<div class="chart-card"><div class="chart-title">Top Categories</div><div class="chart-container"><canvas id="categoryChart"></canvas></div></div>
+</div>
+<div class="charts-grid"><div class="chart-card full-width"><div class="chart-title">Agencies by City</div><table class="city-table"><thead><tr><th>City</th><th>Leads</th><th class="city-bar-cell">Distribution</th></tr></thead><tbody>
+${data.citySorted.slice(0,25).map(([city,count])=>'<tr><td>'+city+'</td><td class="city-count">'+count+'</td><td class="city-bar-cell"><div class="city-mini-bar"><div class="city-mini-fill" style="width:'+Math.round(count/maxCity*100)+'%"></div></div></td></tr>').join('')}
+</tbody></table></div></div>
+<div class="chart-card full-width"><div class="chart-title">Agencies by Category</div><table class="city-table"><thead><tr><th>Category</th><th>Leads</th><th class="city-bar-cell">Distribution</th></tr></thead><tbody>
+${data.catSorted.map(([cat,count])=>'<tr><td>'+cat+'</td><td class="city-count">'+count+'</td><td class="city-bar-cell"><div class="city-mini-bar"><div class="city-mini-fill" style="width:'+Math.round(count/data.catSorted[0][1]*100)+'%"></div></div></td></tr>').join('')}
+</tbody></table></div></div></div>`;
+setTimeout(()=>{document.querySelectorAll('.completeness-bar').forEach(bar=>{bar.style.width=bar.dataset.target+'%'})},100);
+const growthCtx=document.getElementById('growthChart').getContext('2d');
+new Chart(growthCtx,{type:'line',data:{labels:data.growth.map(g=>g.date),datasets:[{label:'Total Agencies',data:data.growth.map(g=>g.total),borderColor:'#0066FF',backgroundColor:'rgba(0,102,255,0.1)',fill:true,tension:0.3,pointRadius:0,pointHitRadius:10,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#111827',borderColor:'#1e2a3a',borderWidth:1,titleFont:{weight:'700'},callbacks:{label:(ctx)=>ctx.parsed.y.toLocaleString()+' agencies'}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:8,font:{size:11}}},y:{grid:{color:'#1e2a3a'},ticks:{font:{size:11},callback:v=>v.toLocaleString()}}}}});
+const catColors=['#0066FF','#22c55e','#3b82f6','#a855f7','#eab308','#ef4444','#06b6d4','#ec4899','#f59e0b','#8b5cf6','#14b8a6','#f43f5e','#6366f1','#84cc16','#0ea5e9'];
+const catCtx=document.getElementById('categoryChart').getContext('2d');
+new Chart(catCtx,{type:'doughnut',data:{labels:data.catSorted.map(([cat])=>cat),datasets:[{data:data.catSorted.map(([,count])=>count),backgroundColor:catColors.slice(0,data.catSorted.length),borderWidth:0,hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'right',labels:{boxWidth:10,padding:8,font:{size:11}}},tooltip:{backgroundColor:'#111827',borderColor:'#1e2a3a',borderWidth:1}}}})}
+loadData().then(render).catch(err=>{document.getElementById('app').innerHTML='<div class="loading" style="color:#ef4444">Error: '+err.message+'</div>'});
+</script>
+</body>
+</html>
