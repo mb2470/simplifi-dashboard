@@ -53,7 +53,7 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background-i
 .loading{display:flex;align-items:center;justify-content:center;min-height:60vh;font-size:18px;color:var(--text-dim)}
 .loading-spinner{width:40px;height:40px;border:3px solid var(--border);border-top:3px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-right:16px}
 @keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr)}.charts-grid{grid-template-columns:1fr}.header{padding:24px}.dashboard{padding:24px}.header h1{font-size:28px}}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr)}.charts-grid{grid-template-columns:1fr}.header{padding:16px 20px}.dashboard{padding:16px 20px}.header h1{font-size:28px}.kpi-value{font-size:36px}.city-bar-cell{display:none}}@media(max-width:500px){.kpi-row{grid-template-columns:1fr}.header h1{font-size:24px}.kpi-value{font-size:32px}.live-badge{display:none}}
 </style>
 </head>
 <body>
@@ -92,7 +92,7 @@ document.getElementById('app').innerHTML=`
 </div>
 <div class="charts-grid">
 <div class="chart-card full-width"><div class="chart-title">Agent Status</div>
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px">
 ${(data.heartbeats||[]).map(a => {
 const ago = Math.round((Date.now() - new Date(a.last_heartbeat).getTime()) / 60000);
 const isAlive = ago < 10;
