@@ -78,7 +78,7 @@ const catSorted=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).slice(0,15);
 const byDate={};allRows.forEach(r=>{const date=r.created_at?.split('T')[0];if(date)byDate[date]=(byDate[date]||0)+1});
 let cum=0;const growth=Object.entries(byDate).sort().map(([date,count])=>{cum+=count;return{date,added:count,total:cum}});
 const{data:heartbeats}=await sb.from('agent_heartbeats').select('*');
-return{total,withEmail,withPhone,withAddress,withMarkdown,cities,citySorted,catSorted,growth,heartbeats:heartbeats||[]}}
+return{total,withEmail,withPhone,withAddress,withServices,cities,citySorted,catSorted,growth,heartbeats:heartbeats||[]}}
 function render(data){
 const maxCity=data.citySorted[0]?.[1]||1;
 document.getElementById('app').innerHTML=`
