@@ -82,7 +82,7 @@ return{total,withEmail,withPhone,withAddress,withServices,cities,citySorted,catS
 function render(data){
 const maxCity=data.citySorted[0]?.[1]||1;
 document.getElementById('app').innerHTML=`
-<div class="header"><div class="header-top"><div><h1>Simpli.fi Agency Intelligence</h1><div class="subtitle">AI-powered agency discovery across ${data.cities} Colorado cities</div></div><div class="live-badge"><div class="live-dot"></div>Live from Supabase</div></div></div>
+<div class="header"><div class="header-top"><div><h1>Simpli.fi Agency Intelligence</h1><div class="subtitle">AI-powered agency discovery across ${data.cities} cities</div></div><div class="live-badge"><div class="live-dot"></div>Live from Supabase</div></div></div>
 <div class="dashboard">
 <div class="kpi-row">
 <div class="kpi-card"><div class="kpi-label">Total Agencies</div><div class="kpi-value">${data.total.toLocaleString()}</div><div class="kpi-sub">Across ${data.cities} cities</div></div>
