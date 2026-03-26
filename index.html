@@ -51,6 +51,10 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background-i
 .city-mini-bar{height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden}
 .city-mini-fill{height:100%;background:var(--accent);border-radius:3px;transition:width 1s ease}
 .loading{display:flex;align-items:center;justify-content:center;min-height:60vh;font-size:18px;color:var(--text-dim)}
+.agent-info{position:relative;display:inline-block;cursor:pointer;margin-left:6px;width:16px;height:16px;border-radius:50%;background:var(--border);color:var(--text-dim);font-size:10px;text-align:center;line-height:16px;font-weight:700;font-style:italic;vertical-align:middle}
+.agent-info:hover .agent-tooltip{display:block}
+.agent-tooltip{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:260px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text);line-height:1.5;font-style:normal;font-weight:400;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,0.4)}
+.agent-tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--border)}
 .loading-spinner{width:40px;height:40px;border:3px solid var(--border);border-top:3px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-right:16px}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:900px){.kpi-row{grid-template-columns:repeat(2,1fr)}.charts-grid{grid-template-columns:1fr}.header{padding:16px 20px}.dashboard{padding:16px 20px}.header h1{font-size:28px}.kpi-value{font-size:36px}.city-bar-cell{display:none}}@media(max-width:500px){.kpi-row{grid-template-columns:1fr}.header h1{font-size:24px}.kpi-value{font-size:32px}.live-badge{display:none}}
@@ -94,11 +98,16 @@ document.getElementById('app').innerHTML=`
 <div class="chart-card full-width"><div class="chart-title">Agent Status</div>
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px">
 ${(data.heartbeats||[]).map(a => {
+const descriptions = {
+'Simplifi Scout': 'Searches Google across 40 US metros for local advertising and marketing agencies. Paused when not actively searching to conserve Serper credits.',
+'Simplifi Researcher': 'Crawls agency websites using headless Chrome to capture full page content. Extracts raw markdown for downstream analysis and contact extraction.',
+'Simplifi Analyst': 'Uses local AI (Qwen) to extract agency details including services offered, industry verticals, contact names and titles, phone, email, and social media URLs.',
+};
 const ago = Math.round((Date.now() - new Date(a.last_heartbeat).getTime()) / 60000);
 const isAlive = ago < 10;
 const statusColor = isAlive ? '#22c55e' : ago < 60 ? '#eab308' : '#ef4444';
 const statusText = isAlive ? 'Active' : ago < 60 ? 'Idle' : 'Offline';
-return '<div style="background:var(--surface-2);border-radius:8px;padding:16px;border-left:3px solid '+statusColor+'"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-weight:700;font-size:14px">'+a.agent_name+'</span><span style="background:'+statusColor+'22;color:'+statusColor+';padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">'+statusText+'</span></div><div style="font-size:12px;color:var(--text-dim)">'+( a.last_message||'No activity')+'</div><div style="font-size:11px;color:var(--text-dim);margin-top:4px">'+ago+'m ago &middot; '+( a.items_processed||0)+' processed</div></div>'
+return '<div style="background:var(--surface-2);border-radius:8px;padding:16px;border-left:3px solid '+statusColor+'"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-weight:700;font-size:14px">'+a.agent_name+'<span class="agent-info">i<span class="agent-tooltip">'+(descriptions[a.agent_name]||'AI agent working on your agency pipeline.')+'</span></span></span><span style="background:'+statusColor+'22;color:'+statusColor+';padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600">'+statusText+'</span></div><div style="font-size:12px;color:var(--text-dim)">'+( a.last_message||'No activity')+'</div><div style="font-size:11px;color:var(--text-dim);margin-top:4px">'+ago+'m ago &middot; '+( a.items_processed||0)+' processed</div></div>'
 }).join('')}
 </div></div></div>
 <div class="charts-grid">
